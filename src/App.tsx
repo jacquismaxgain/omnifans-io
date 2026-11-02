@@ -123,24 +123,6 @@ async function telegramProxy(method: string, token: string, payload: Record<stri
 /*  du modèle. Le navigateur n'appelle jamais ces plateformes.         */
 /* ------------------------------------------------------------------ */
 
-
-// Poll Telegram messages every 5s
-async function pollTelegramMessages(token: string, onMessage: (msg: any) => void) {
-  try {
-    const res = await fetch("/api/actions", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type: "telegram_proxy", method: "getUpdates", token, payload: { timeout: 0, limit: 100 } }),
-    });
-    const data = await res.json();
-    if (data.ok && data.result) {
-      data.result.forEach((update: any) => {
-        if (update.message) onMessage(update.message);
-      });
-    }
-  } catch {}
-}
-
 async function platformProxy(
   type: "onlyfans_proxy" | "mym_proxy",
   method: string,
