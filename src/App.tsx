@@ -100,33 +100,21 @@ function newKey(prefix: string) {
 /* ------------------------------------------------------------------ */
 
 async function telegramProxy(method: string, token: string, payload: Record<string, unknown> = {}): Promise<any> {
-  // Essaie backend Vercel d'abord
+  const res = await fetch("/api/actions", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
+  });
+  let data: any = {};
   try {
-    const res = await fetch("/api/actions", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
-    });
-    let data: any = {};
-    try { data = await res.json(); } catch { data = {}; }
-    if (res.ok && !data?.error && data?.ok !== false) {
-      return data?.result ?? data;
-    }
-  } catch {}
-
-  // Fallback direct Telegram API (si backend indisponible, fonctionne côté client)
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.description || "Telegram error");
-    return data.result ?? data;
-  } catch (e) {
-    throw e;
+    data = await res.json();
+  } catch {
+    data = {};
   }
+  if (!res.ok || data?.error || data?.ok === false) {
+    throw new Error(data?.description || data?.error || `HTTP ${res.status}`);
+  }
+  return data?.result ?? data;
 }
 
 /* ------------------------------------------------------------------ */
@@ -135,24 +123,45 @@ async function telegramProxy(method: string, token: string, payload: Record<stri
 /*  du modèle. Le navigateur n'appelle jamais ces plateformes.         */
 /* ------------------------------------------------------------------ */
 
+
+// Poll Telegram messages every 5s
+async function pollTelegramMessages(token: string, onMessage: (msg: any) => void) {
+  try {
+    const res = await fetch("/api/actions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "telegram_proxy", method: "getUpdates", token, payload: { timeout: 0, limit: 100 } }),
+    });
+    const data = await res.json();
+    if (data.ok && data.result) {
+      data.result.forEach((update: any) => {
+        if (update.message) onMessage(update.message);
+      });
+    }
+  } catch {}
+}
+
 async function platformProxy(
   type: "onlyfans_proxy" | "mym_proxy",
   method: string,
   credential: { api_key?: string; token?: string },
   payload: Record<string, unknown> = {}
 ): Promise<any> {
+  const res = await fetch("/api/actions", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type, method, ...credential, payload }),
+  });
+  let data: any = {};
   try {
-    const res = await fetch("/api/actions", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type, method, ...credential, payload }),
-    });
-    let data: any = {};
-    try { data = await res.json(); } catch { data = {}; }
-    if (res.ok) return data?.result ?? data;
-  } catch {}
-  // Fallback local
-  return { ok: true, result: { status: "sent" } };
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok || data?.error || data?.ok === false) {
+    throw new Error(data?.description || data?.error || `HTTP ${res.status}`);
+  }
+  return data?.result ?? data;
 }
 
 /* ------------------------------------------------------------------ */
