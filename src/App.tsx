@@ -169,8 +169,7 @@ type Page =
 type Platform = "telegram" | "onlyfans" | "mym";
 
 const PLATFORM_META: Record<Platform, { label: string; short: string; color: string; soft: string }> = {
-  telegram: { label: "Telegram", short: "TG", color: "#229ed9",
-          photoUrl: "", soft: "rgba(34,158,217,0.14)" },
+  telegram: { label: "Telegram", short: "TG", color: "#229ed9", soft: "rgba(34,158,217,0.14)" },
   onlyfans: { label: "OnlyFans", short: "OF", color: "#00aff0", soft: "rgba(0,175,240,0.14)" },
   mym: { label: "MYM.fans", short: "MYM", color: "#e84393", soft: "rgba(232,67,147,0.14)" },
 };
