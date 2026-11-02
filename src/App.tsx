@@ -100,21 +100,26 @@ function newKey(prefix: string) {
 /* ------------------------------------------------------------------ */
 
 async function telegramProxy(method: string, token: string, payload: Record<string, unknown> = {}): Promise<any> {
-  const res = await fetch("/api/actions", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
-  });
-  let data: any = {};
   try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
-  if (!res.ok || data?.error || data?.ok === false) {
-    throw new Error(data?.description || data?.error || `HTTP ${res.status}`);
-  }
-  return data?.result ?? data;
+    const res = await fetch("/api/actions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
+    });
+    let data: any = {};
+    try { data = await res.json(); } catch { data = {}; }
+    if (res.ok && !data?.error && data?.ok !== false) {
+      return data?.result ?? data;
+    }
+  } catch {}
+  const directRes = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const directData = await directRes.json();
+  if (!directData.ok) throw new Error(directData.description || "Telegram error");
+  return directData.result ?? directData;
 }
 
 /* ------------------------------------------------------------------ */
@@ -164,7 +169,8 @@ type Page =
 type Platform = "telegram" | "onlyfans" | "mym";
 
 const PLATFORM_META: Record<Platform, { label: string; short: string; color: string; soft: string }> = {
-  telegram: { label: "Telegram", short: "TG", color: "#229ed9", soft: "rgba(34,158,217,0.14)" },
+  telegram: { label: "Telegram", short: "TG", color: "#229ed9",
+          photoUrl: "", soft: "rgba(34,158,217,0.14)" },
   onlyfans: { label: "OnlyFans", short: "OF", color: "#00aff0", soft: "rgba(0,175,240,0.14)" },
   mym: { label: "MYM.fans", short: "MYM", color: "#e84393", soft: "rgba(232,67,147,0.14)" },
 };
