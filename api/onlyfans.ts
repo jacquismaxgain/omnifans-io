@@ -1,1 +1,1 @@
-export default async function handler(req,res){ return res.json({ ok:true, result:{status:'sent'}}) }
+export default async function handler(req,res){ return res.json({ok:true}) }
