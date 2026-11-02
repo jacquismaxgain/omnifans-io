@@ -71,7 +71,7 @@ import {
 /* ------------------------------------------------------------------ */
 
 async function callApi(action: string, args: Record<string, unknown>): Promise<any> {
-  const res = await fetch("/api/actions", {
+  const res = await fetch("actions", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ action, args }),
@@ -100,26 +100,21 @@ function newKey(prefix: string) {
 /* ------------------------------------------------------------------ */
 
 async function telegramProxy(method: string, token: string, payload: Record<string, unknown> = {}): Promise<any> {
-  try {
-    const res = await fetch("/api/actions", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
-    });
-    let data: any = {};
-    try { data = await res.json(); } catch { data = {}; }
-    if (res.ok && !data?.error && data?.ok !== false) {
-      return data?.result ?? data;
-    }
-  } catch {}
-  const directRes = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+  const res = await fetch("actions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type: "telegram_proxy", method, token, payload }),
   });
-  const directData = await directRes.json();
-  if (!directData.ok) throw new Error(directData.description || "Telegram error");
-  return directData.result ?? directData;
+  let data: any = {};
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok || data?.error || data?.ok === false) {
+    throw new Error(data?.description || data?.error || `HTTP ${res.status}`);
+  }
+  return data?.result ?? data;
 }
 
 /* ------------------------------------------------------------------ */
@@ -134,7 +129,7 @@ async function platformProxy(
   credential: { api_key?: string; token?: string },
   payload: Record<string, unknown> = {}
 ): Promise<any> {
-  const res = await fetch("/api/actions", {
+  const res = await fetch("actions", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ type, method, ...credential, payload }),
@@ -1096,7 +1091,7 @@ export default function App() {
      - Telegram : facture Stars (sendInvoice, devise XTR) via telegram_proxy
      - OnlyFans : sendPPV via onlyfans_proxy (clé API du modèle)
      - MYM.fans : sendMessage via mym_proxy (token du modèle)
-     Tout transite par fetch("/api/actions") — aucun appel direct aux plateformes. */
+     Tout transite par fetch("actions") — aucun appel direct aux plateformes. */
   const sendPpv = async (item: MediaItem, price: number, via?: Platform): Promise<boolean> => {
     if (!activeConv || sendingPpv) return false;
     const plat = via ?? activeConv.platform;
@@ -1798,7 +1793,7 @@ export default function App() {
             onClick={() => testIntegration(p)}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface-2)] disabled:opacity-50"
           >
-            <RefreshCw className="h-3.5 w-3.5" /> {saving ? "Test en cours…" : "Tester la connexion</span></button><button onClick={setAutoWebhook} disabled={webhookLoading} className="ml-2 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50">{webhookLoading ? "..." : "Activer Webhook Auto"}</button><button onClick={deleteWebhookAuto} disabled={webhookLoading} className="ml-2 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 disabled:opacity-50">Désactiver Webhook</button><button className="hidden"><span>Tester la connexion"}
+            <RefreshCw className="h-3.5 w-3.5" /> {saving ? "Test en cours…" : "Tester la connexion"}
           </button>
         </div>
 

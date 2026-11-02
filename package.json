@@ -1,6 +1,6 @@
 {
-  "name": "omnifans-auto-webhook",
-  "version": "5.0.0",
+  "name": "omnifans-clean-final",
+  "version": "6.0.0",
   "private": true,
   "type": "module",
   "engines": {

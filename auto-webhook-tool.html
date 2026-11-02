@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>OmniFans - Auto Webhook</title>
+<style>body{font-family:sans-serif;padding:40px;max-width:600px;margin:0 auto}input{width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px}button{padding:12px 24px;background:#229ed9;color:white;border:none;border-radius:8px;cursor:pointer;margin:5px}button:hover{background:#1a7db0}.success{color:green;background:#e8f5e9;padding:12px;border-radius:8px;margin:10px 0}.error{color:red;background:#ffebee;padding:12px;border-radius:8px;margin:10px 0}</style>
+</head><body>
+<h2>🤖 OmniFans.io - Activer Webhook Auto</h2>
+<p>Tsy mila mandeha api.telegram.org intsony - ato ihany !</p>
+<label>Bot Token:</label>
+<input id="token" placeholder="8870626260:AAG-XkMMRKDyrd5wyAz2X8UHm40zIW5UxE0" value="8870626260:AAG-XkMMRKDyrd5wyAz2X8UHm40zIW5UxE0">
+<label>Webhook URL (Vercel):</label>
+<input id="webhook" value="https://omnifans-io-krpy.vercel.app/api/webhook">
+<div>
+<button onclick="setWebhook()">✅ Activer Webhook</button>
+<button onclick="deleteWebhook()" style="background:#ff9800">🗑️ Désactiver (Polling)</button>
+<button onclick="checkWebhook()" style="background:#4caf50">🔍 Vérifier</button>
+</div>
+<div id="result"></div>
+<script>
+async function setWebhook(){
+  const token=document.getElementById('token').value.trim();
+  const url=document.getElementById('webhook').value.trim();
+  const res=document.getElementById('result');
+  res.innerHTML='⏳ Activation...';
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${token}/setWebhook`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    const d=await r.json();
+    if(d.ok){ res.innerHTML=`<div class=success>✅ Succès !<br>${JSON.stringify(d)}<br><br>Webhook: ${url}<br>Maintenant les messages Telegram arrivent dans OmniFans !</div>`; }
+    else{ res.innerHTML=`<div class=error>❌ Erreur: ${JSON.stringify(d)}</div>`; }
+  }catch(e){ res.innerHTML=`<div class=error>❌ ${e.message}</div>`; }
+}
+async function deleteWebhook(){
+  const token=document.getElementById('token').value.trim();
+  const res=document.getElementById('result');
+  res.innerHTML='⏳ Suppression...';
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${token}/deleteWebhook`,{method:'POST'});
+    const d=await r.json();
+    res.innerHTML=`<div class=success>✅ Webhook supprimé - Mode Polling activé<br>${JSON.stringify(d)}</div>`;
+  }catch(e){ res.innerHTML=`<div class=error>❌ ${e.message}</div>`; }
+}
+async function checkWebhook(){
+  const token=document.getElementById('token').value.trim();
+  const res=document.getElementById('result');
+  res.innerHTML='⏳ Vérification...';
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`);
+    const d=await r.json();
+    res.innerHTML=`<div class=success>ℹ️ Info:<br><pre>${JSON.stringify(d,null,2)}</pre></div>`;
+  }catch(e){ res.innerHTML=`<div class=error>❌ ${e.message}</div>`; }
+}
+</script>
+</body></html>
